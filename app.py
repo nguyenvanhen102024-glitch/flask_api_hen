@@ -51,6 +51,42 @@ def add():
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+@app.route("/upload_bulk", methods=["POST"])
+def upload_bulk():
+    try:
+        items = request.get_json()
+
+        if not items:
+            return jsonify({"success": False, "error": "No data received"})
+
+        conn = connect_db()
+        cur = conn.cursor()
+
+        sql = """
+            INSERT INTO dulieu (ngay, stt, tenhang, soluong, page, pageName)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+
+        for item in items:
+            cur.execute(sql, (
+                item.get("ngay"),
+                item.get("stt"),
+                item.get("tenhang"),
+                item.get("soluong"),
+                item.get("page"),
+                item.get("pageName")
+            ))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            "success": True,
+            "message": f"Đã nhận {len(items)} dòng và lưu vào Aiven."
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
